@@ -1,0 +1,98 @@
+declarations -> type_declarations declarations_1 .
+declarations -> function_declarations declarations_1 .
+declarations -> variable_declarations declarations_1 .
+
+declarations_1 -> type_declarations declarations_1 .
+declarations_1 -> function_declarations declarations_1 .
+declarations_1 -> variable_declarations declarations_1 .
+declarations_1 -> .
+
+type_declarations -> typ id equal type type_declarations_1 .
+type_declarations_1 -> comma id equal type type_declarations_1 .
+type_declarations_1 -> semicolon .
+
+function_declarations -> fun id lpar function_declarations_1 .
+function_declarations_1 -> id colon type function_declarations_2 .
+function_declarations_1 -> function_declarations_2 .
+function_declarations_2 -> comma id colon type function_declarations_2 .
+function_declarations_2 -> rpar colon type function_declarations_3 .
+function_declarations_3 -> equal statement function_declarations_4 .
+function_declarations_3 -> function_declarations_4 .
+function_declarations_4 -> comma id lpar function_declarations_1 .
+function_declarations_4 -> semicolon .
+
+variable_declarations -> var id colon type variable_declarations_1 .
+variable_declarations_1 -> comma id colon type variable_declarations_1 .
+variable_declarations_1 -> semicolon .
+
+type -> void .
+type -> char .
+type -> int .
+type -> bool .
+type -> id .
+type -> lbracket expression rbracket type .
+type -> caron type .
+type -> lbrace id colon type type_1 .
+type -> lpar type rpar .
+type_1 -> comma id colon type type_1 .
+type_1 -> rbrace .
+
+expression -> disjunctive_expression .
+
+disjunctive_expression -> conjunctive_expression disjunctive_expression_1 .
+disjunctive_expression_1 -> disjunctive_operator conjunctive_expression disjunctive_expression_1 .
+disjunctive_expression_1 -> .
+
+conjunctive_expression -> relational_expression conjunctive_expression_1 .
+conjunctive_expression_1 -> conjunctive_operator relational_expression conjunctive_expression_1 .
+conjunctive_expression_1 -> .
+
+relational_expression -> additive_expression relational_expression_1 .
+relational_expression_1 -> relational_operator additive_expression .
+relational_expression_1 -> .
+
+additive_expression -> multiplicative_expression additive_expression_1 .
+additive_expression_1 -> additive_operator multiplicative_expression additive_expression_1 .
+additive_expression_1 -> .
+
+multiplicative_expression -> prefix_expression multiplicative_expression_1 .
+multiplicative_expression_1 -> multiplicative_operator prefix_expression multiplicative_expression_1 .
+multiplicative_expression_1 -> .
+
+prefix_expression -> prefix_operator prefix_expression .
+prefix_expression -> postfix_expression .
+
+postfix_expression -> final_expression postfix_expression_1 .
+postfix_expression_1 -> postfix_operator postfix_expression_1 .
+postfix_expression_1 -> .
+
+final_expression -> void_const .
+final_expression -> bool_const .
+final_expression -> int_const .
+final_expression -> char_const .
+final_expression -> string_const .
+final_expression -> ptr_const .
+final_expression -> id final_expression_1 .
+final_expression -> lpar expression final_expression_4 .
+final_expression -> new lpar type rpar .
+final_expression -> del lpar expression rpar .
+final_expression_1 -> lpar final_expression_2 .
+final_expression_1 -> .
+final_expression_2 -> expression final_expression_3 .
+final_expression_2 -> rpar .
+final_expression_3 -> comma expression final_expression_3 .
+final_expression_3 -> rpar .
+final_expression_4 -> colon type rpar .
+final_expression_4 -> rpar .
+
+statement -> expression statement_1 .
+statement -> if expression then statement statement_2 .
+statement -> while expression do statement .
+statement -> let declarations in statement .
+statement -> lbrace statement statement_3 .
+statement_1 -> equal expression .
+statement_1 -> .
+statement_2 -> else statement .
+statement_2 -> .
+statement_3 -> semicolon statement_3 .
+statement_3 -> rbrace .

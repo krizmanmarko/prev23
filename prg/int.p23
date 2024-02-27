@@ -1,0 +1,443 @@
+# Extern
+fun putChar(c: int): void, getChar(): char, exit(): void;
+var i:int, max:int, c: char;
+
+fun get(s: ^char, i: int): char = {
+    ((s : int) + (i*8) : ^char)^
+},
+nl(): void = putChar(10),
+printNum(num:int):void = {
+
+    if num == 0 then {
+        none
+    } else {
+        printNum(num / 10);
+        putChar(('0':int) + num % 10)
+    }
+},
+print(s: ^char): void = {
+    if (s != (nil : ^char)) then {
+        let var i: int; in {
+            i = 0;
+            while get(s, i) != (0:char) do {
+                putChar((get(s, i) : int));
+                i = i + 1
+            }
+        }
+    };
+    none
+},
+println(s: ^char): void = {
+    print(s);
+    nl();
+    none
+},
+nls(): void = {
+    println("-----------");
+    none
+};
+
+fun fizzBuzz():void = {
+
+    i = 1;
+    max = 100;
+
+    while (i < max) do {
+
+        printNum(i);
+        putChar((':':int));
+        putChar((' ':int));
+
+        if i % 3 == 0 then{
+            putChar(('F':int));
+            putChar(('i':int));
+            putChar(('z':int));
+            putChar(('z':int))
+        };
+
+
+        if i % 5 == 0 then {
+            putChar(('B':int));
+            putChar(('u':int));
+            putChar(('z':int));
+            putChar(('z':int))
+        };
+
+       nl();
+
+       i = i + 1
+    };
+
+    none
+
+};
+
+fun factorial(n: int): int = {
+
+    let
+        var fac: int;
+    in {
+        if n == 1 then
+            fac = 1
+        else
+            fac = n * factorial(n - 1);
+        fac
+    }
+},
+runFactorial(): int = {
+
+    let
+        var i: int;
+    in {
+        i = 1;
+        while i <= 10 do {
+            printNum(i);
+            putChar((':':int));
+            putChar((' ':int));
+            printNum(factorial(i));
+            putChar(10);
+            i = i + 1
+        }
+    };
+    0
+};
+
+fun printArr(arr:^[16]int):void = {
+
+    let
+        var i:int;
+    in {
+        i = 0;
+        while i < 16 do {
+            printNum(arr^[i]);
+            putChar((' ':int));
+            i = i + 1
+        }
+    };
+    putChar(10);   # newline
+    none
+},
+swap(a : ^int, b : ^int) : void = {
+
+    let
+        var temp:int;
+    in {
+        temp = a^;
+        a^ = b^;
+        b^ = temp
+    };
+    none
+},
+partition(arr:^[16]int, low:int, high:int):int = {
+
+    let
+        var pivot:int, i:int, j:int;
+    in {
+        pivot = arr^[high];
+        i = low - 1;
+        j = low;
+        while j < high do {
+            if arr^[j] <= pivot then {
+                i = i + 1;
+                swap(^arr^[i], ^arr^[j])
+            }
+            else
+                none;
+            j = j + 1
+        };
+        swap(^arr^[i + 1], ^arr^[high]);
+        i + 1
+    }
+},
+quicksort(arr:^[16]int, low:int, high:int):void = {
+
+    let
+        var pi:int;
+    in {
+        if low < high then {
+            pi = partition(arr, low, high);
+            quicksort(arr, low, pi - 1);
+            quicksort(arr, pi + 1, high)
+        } else {
+            none
+        }
+    }
+},
+runQuicksort():int = {
+
+    let
+        var i:int;
+        var arr:[16]int;
+    in {
+
+        i = 0;
+        while i < 16 do {
+            arr[i] = 15 - i;
+            i = i + 1
+        };
+
+        printArr(^arr);
+        quicksort(^arr, 0, 15);
+        printArr(^arr)
+    };
+    0
+};
+
+fun strlen(s: ^char): int = {
+    let var i: int; in {
+        i = 0;
+        if (s != (nil : ^char)) then {
+            while get(s, i) != (0:char) do
+                i = i + 1
+        };
+        i
+    }
+},
+type_hello(s: ^char, offset: int): ^char = {
+    let var buff: ^[10]char; in {
+        buff = (s : ^[10]char);
+        buff^[offset+0] = 'h';
+        buff^[offset+1] = 'e';
+        buff^[offset+2] = 'l';
+        buff^[offset+3] = 'l';
+        buff^[offset+4] = 'o';
+        buff^[offset+5] = (0:char)
+    };
+    s
+},
+type_world(s: ^char, offset: int): ^char = {
+    let var buff: ^[10]char; in {
+        buff = (s : ^[10]char);
+        buff^[offset+0] = 'w';
+        buff^[offset+1] = 'o';
+        buff^[offset+2] = 'r';
+        buff^[offset+3] = 'l';
+        buff^[offset+4] = 'd';
+        buff^[offset+5] = '!';
+        buff^[offset+6] = (0:char)
+    };
+    s
+}, helloWorld(): int = {
+     println("hello world!");
+
+
+     let var s1: [10]char, s2: ^char; in {
+         s2 = (new ([10]char) : ^char);
+
+         type_hello((^s1 : ^char), 0);
+         type_world(s2, 0);
+
+         print((^s1 : ^char));
+         putChar((' ': int));
+         print(s2);
+         nl();
+
+         none
+     };
+
+
+     # Test new/del
+     let var s: ^char; in {
+         s = (new ([20]char) : ^char);
+
+         type_hello(s, 0);
+         ((s : int) + (strlen(s) + 1)*8 : ^char)^ = (0:char);
+         ((s : int) + (strlen(s) + 0)*8 : ^char)^ = ' ';
+         type_world(s, strlen(s));
+
+         println(s);
+         del (s)
+     };
+
+
+     let var s: ^char; in {
+         s = "hello world!";
+         print("String \"");
+         print(s);
+         print("\" is ");
+         printNum(strlen(s));
+         print("+1 characters long (or ");
+         printNum((strlen(s) + 1) * 8);
+         print(" bytes).");
+         nl()
+     };
+
+
+     0
+};
+
+typ struct = {
+    c1: int,
+    c2: {
+        len: int,
+        arr: [10]int
+    }
+};
+
+
+
+
+var global_var: int,
+    global_struct: struct;
+
+
+
+fun f1(): int = 1,
+fn(i: int): int = i,
+fp(): ^int = ^global_var,
+# arr.len
+len(ptr: ^struct): int = {
+    let var len: int; in {
+        if (ptr != (nil: ^struct))
+            then len = ptr^.c2.len
+            else len = 0;
+        len
+    }
+},
+# arr = [0, 1, 2, ...,  n]
+populate(ptr: ^struct, n: int): void = {
+    if (ptr != (nil: ^struct)) then {
+        ptr^.c2.len = 0;        # i
+
+        while (ptr^.c2.len < n & ptr^.c2.len < fn(f1() + fn(9))) do {        # i < n && i < 10
+            ptr^.c2.arr[fn(ptr^.c2.len)] = fn(1 - f1()) + fn(ptr^.c2.len);   # arr[i] = i
+            ptr^.c2.len = ptr^.c2.len + f1()                                 # i++
+        }
+
+    }
+},
+# arr[i]
+getArr(ptr: ^struct, i: int): ^int = {
+    let var ret: ^int; in {
+        if (ptr != (nil: ^struct) & i >= 0 & i < ptr^.c2.len)
+            then ret = ^(ptr^.c2.arr[i])
+            else ret = (nil : ^int);
+        ret
+    }
+},
+add_to_global_var(inc: int, mul: int): int = {
+    global_var = global_var + inc*mul;
+    global_var
+},
+printNumBig(n: int): void = {
+    let var buff: [32]char, i: int; in {
+        i = 0;
+
+        if (n < 0) then {
+            n = -n;
+            putChar(('-': int))
+        };
+
+        buff[i] = (('0':int) + (n % 10) : char);
+        n = n / 10;
+
+        while (n != 0) do {
+            i = i + 1;
+            buff[i] = (('0':int) + (n % 10) : char);
+            n = n / 10
+        };
+
+        while (i >= 0) do {
+            putChar((buff[i]: int));
+            i = i - 1
+        };
+
+        nl();
+
+        none
+    }
+},
+bigTest(): int = {
+    global_var = 123456789 + fn(-123456790);
+    printNumBig(global_var);       # -1
+    global_var = -global_var;
+    printNumBig(global_var);       # 1
+
+    # Test if RV is stored into a temp var (Not working in this case :))
+    printNumBig(122 + f1());     # 123
+    printNumBig(124 + -f1());    # 123
+    printNumBig(122 + fp()^);    # 123
+
+    # Test global var modification
+    add_to_global_var( global_var , add_to_global_var(f1(), fn(2)) );    # 6
+    printNumBig(global_var);
+
+    # Test pointers and arrays
+    let var sum: int; in {
+        populate(^global_struct, 20);
+
+        global_var = 0;  # i
+        sum = 0;
+
+        while (global_var < 10) do {
+            sum = sum + getArr(^global_struct, add_to_global_var(123, 0))^;    # sum += arr[i]
+            add_to_global_var(1, fn(1))                                     # i++
+        };
+
+        printNumBig(sum);
+        sum  # 45
+    }
+
+};
+
+fun printActions(): void = {
+
+    println("Select action:");
+    println("'1': FizzBuzz");
+    println("'2': Factorial");
+    println("'3': QuickSort");
+    println("'4': Hello World");
+    println("'5': Big Test");
+
+    println("'q': Quit (nicely)");
+    println("'e': Exit (aggressively)");
+    none
+},
+selectAction(c: char): void = {
+
+    if (c == '1') then {
+        fizzBuzz();
+        none
+    };
+
+    if (c == '2') then {
+        runFactorial();
+        none
+    };
+
+    if (c == '3') then {
+        runQuicksort();
+        none
+    };
+
+    if (c == '4') then {
+        helloWorld();
+        none
+    };
+
+    if (c == '5') then {
+        bigTest();
+        none
+    };
+
+    if (c == 'e') then {
+        exit();
+        none
+    };
+    nls();
+    none
+
+};
+
+fun main(): void = {
+
+    c = '0';
+    while(c != 'q') do {
+        printActions();
+        if (c != '0') then c = getChar(); # clear buffer
+        c = getChar();
+        nls();
+        selectAction(c)
+    };
+    none
+};

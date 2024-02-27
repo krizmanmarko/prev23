@@ -1,0 +1,112 @@
+package prev23.phase.seman;
+
+import prev23.common.report.*;
+import prev23.data.ast.tree.*;
+import prev23.data.ast.tree.decl.*;
+import prev23.data.ast.tree.expr.*;
+import prev23.data.ast.tree.stmt.*;
+import prev23.data.ast.tree.type.*;
+import prev23.data.ast.visitor.*;
+
+/**
+ * AddrResolver resolver.
+ */
+public class AddrResolver extends AstFullVisitor<Boolean, Integer> {
+
+	@Override
+	public Boolean visit(AstTrees<? extends AstTree> trees, Integer arg) {
+		for (AstTree t: trees)
+			if (t != null)
+				t.accept(this, 0);
+		return false;
+	}
+
+	@Override
+	public Boolean visit(AstAssignStmt stmt, Integer arg) {
+		if (stmt.dst != null)
+			stmt.dst.accept(this, 1);
+		if (stmt.src != null)
+			stmt.src.accept(this, arg);
+		return false;
+	}
+
+	@Override
+	public Boolean visit(AstExprStmt stmt, Integer arg) {
+		if (stmt.expr != null)
+			stmt.expr.accept(this, 1);
+		return false;
+	}
+
+	@Override
+	public Boolean visit(AstBinExpr expr, Integer arg) {
+		if (expr.fstExpr != null)
+			expr.fstExpr.accept(this, 0);
+		if (expr.sndExpr != null)
+			expr.sndExpr.accept(this, 0);
+		return false;
+	}
+
+	@Override
+	public Boolean visit(AstNameExpr expr, Integer arg) {
+		Boolean lvalue = false;
+		AstNameDecl nDecl = SemAn.declaredAt.get(expr);
+		if (nDecl instanceof AstVarDecl) {
+			lvalue = true;
+		} else if (nDecl instanceof AstParDecl) {
+			lvalue = true;
+		}
+		if (arg == 1) SemAn.isAddr.put(expr, lvalue);
+		return lvalue;
+	}
+
+	@Override
+	public Boolean visit(AstSfxExpr expr, Integer arg) {
+		Boolean lvalue = false;
+		if (expr.expr != null)
+			lvalue = expr.expr.accept(this, 1);
+		SemAn.isAddr.put(expr, lvalue);
+		return lvalue;
+	}
+
+	/*
+	@Override
+	public Boolean visit(AstAtomExpr expr, Integer arg) {
+		Boolean lvalue = false;
+		if (expr.type == null) return lvalue;
+		if (expr.value == null) return lvalue;
+
+		if (expr.type == AstAtomExpr.Type.PTR)
+			lvalue = true;
+		else if (expr.type == AstAtomExpr.Type.STR)
+			lvalue = true;
+
+		if (expr.value.equals("nil"))
+			lvalue = false;
+
+		if (arg == 1) SemAn.isAddr.put(expr, lvalue);
+		return lvalue;
+	}
+	*/
+
+	@Override
+	public Boolean visit(AstArrExpr expr, Integer arg) {
+		Boolean lvalue = false;
+		if (expr.arr != null)
+			lvalue = expr.arr.accept(this, arg);
+		if (expr.idx != null)
+			expr.idx.accept(this, arg);
+		SemAn.isAddr.put(expr, lvalue);
+		return lvalue;
+	}
+
+	@Override
+	public Boolean visit(AstRecExpr expr, Integer arg) {
+		Boolean lvalue = false;
+		if (expr.rec != null)
+			lvalue = expr.rec.accept(this, arg);
+		if (expr.comp != null)
+			expr.comp.accept(this, arg);
+		SemAn.isAddr.put(expr, lvalue);
+		return lvalue;
+	}
+}

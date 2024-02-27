@@ -1,0 +1,396 @@
+parser grammar PrevParser;
+
+@header {
+
+	package prev23.phase.synan;
+
+	import java.util.*;
+
+	import prev23.common.report.*;
+	import prev23.phase.lexan.*;
+
+	import prev23.data.ast.attribute.*;
+	import prev23.data.ast.tree.decl.*;
+	import prev23.data.ast.tree.expr.*;
+	import prev23.data.ast.tree.type.*;
+	import prev23.data.ast.tree.stmt.*;
+	import prev23.data.ast.tree.*;
+	import prev23.data.ast.visitor.*;
+}
+
+@members {
+
+	private Location loc(Token tok) {
+		return new Location((prev23.data.sym.Token) tok);
+	}
+
+	private Location loc(Locatable loc) {
+		return new Location(loc);
+	}
+
+	private Location loc(Token tok1, Token tok2) {
+		return new Location((prev23.data.sym.Token) tok1,
+				    (prev23.data.sym.Token) tok2);
+	}
+
+	private Location loc(Token tok1, Locatable loc2) {
+		return new Location((prev23.data.sym.Token) tok1, loc2);
+	}
+
+	private Location loc(Locatable loc1, Token tok2) {
+		return new Location(loc1, (prev23.data.sym.Token) tok2);
+	}
+
+	private Location loc(Locatable loc1, Locatable loc2) {
+		return new Location(loc1, loc2);
+	}
+}
+
+options{
+    tokenVocab=PrevLexer;
+}
+
+source
+  returns [AstTree ast]
+  : declarations EOF { $ast = $declarations.ast; }
+  ;
+
+declarations
+  returns [AstTree ast]
+  : type_declarations declarations_1
+  {
+	LinkedList<AstTree> ll = $declarations_1.ll;
+	ll.addFirst($type_declarations.ast);
+	$ast = new AstTrees<AstTree>("declarations", ll);
+  }
+  | function_declarations declarations_1
+  {
+	LinkedList<AstTree> ll = $declarations_1.ll;
+	ll.addFirst($function_declarations.ast);
+	$ast = new AstTrees<AstTree>("declarations", ll);
+  }
+  | variable_declarations declarations_1
+  {
+	LinkedList<AstTree> ll = $declarations_1.ll;
+	ll.addFirst($variable_declarations.ast);
+	$ast = new AstTrees<AstTree>("declarations", ll);
+  }
+  ;
+
+declarations_1
+  returns [LinkedList<AstTree> ll]
+  : type_declarations declarations_1
+  {
+	$ll = $declarations_1.ll;
+	$ll.addFirst($type_declarations.ast);
+  }
+  | function_declarations declarations_1
+  {
+	$ll = $declarations_1.ll;
+	$ll.addFirst($function_declarations.ast);
+  }
+  | variable_declarations declarations_1
+  {
+	$ll = $declarations_1.ll;
+	$ll.addFirst($variable_declarations.ast);
+  }
+  | { $ll = new LinkedList<AstTree>(); }
+  ;
+
+type_declarations
+  returns [AstTree ast]
+  : TYP ID EQUAL type type_declarations_1 SEMICOLON
+  {
+	AstTypDecl n = new AstTypDecl(loc($ID, $type.t), $ID.text, $type.t);
+	$type_declarations_1.ll.addFirst(n);
+	$ast = new AstTrees<AstDecl>(loc($TYP, $SEMICOLON), "type declaration",
+				     $type_declarations_1.ll);
+  }
+  ;
+
+type_declarations_1
+  returns [LinkedList<AstDecl> ll]
+  : COMMA ID EQUAL type type_declarations_1
+  {
+	$ll = $type_declarations_1.ll;
+	$ll.addFirst(new AstTypDecl(loc($ID), $ID.text, $type.t));
+  }
+  | { $ll = new LinkedList<AstDecl>(); }
+  ;
+
+function_declarations
+  returns [AstTree ast]
+  : FUN ID LPAR function_params RPAR COLON type function_stmts
+	function_declarations_1 SEMICOLON
+  {
+	AstFunDecl n = new AstFunDecl(loc($ID), $ID.text,
+				      $function_params.ast, $type.t,
+				      $function_stmts.stmt);
+	LinkedList<AstDecl> ll = $function_declarations_1.ll;
+	ll.addFirst(n);
+	$ast = new AstTrees<AstDecl>(loc($FUN, $SEMICOLON),
+				     "function declarations", ll);
+  }
+  ;
+
+function_declarations_1
+  returns [LinkedList<AstDecl> ll]
+  : COMMA ID LPAR function_params RPAR COLON type function_stmts
+	function_declarations_1
+  {
+	AstFunDecl n = new AstFunDecl(loc($ID), $ID.text,
+				      $function_params.ast, $type.t,
+				      $function_stmts.stmt);
+	$ll = $function_declarations_1.ll;
+	$ll.addFirst(n);
+  }
+  | { $ll = new LinkedList<AstDecl>(); }
+  ;
+
+function_params
+  returns [AstTrees<AstParDecl> ast]
+  : ID COLON type function_params_1
+  {
+	AstParDecl par = new AstParDecl(loc($ID, $type.t), $ID.text, $type.t);
+	LinkedList<AstParDecl> ll = $function_params_1.ll;
+	ll.addFirst(par);
+	$ast = new AstTrees<AstParDecl>(loc($ID), "function params", ll);
+  }
+  | { $ast = new AstTrees<AstParDecl>("function params"); }
+  ;
+
+function_params_1
+  returns [LinkedList<AstParDecl> ll]
+  : COMMA ID COLON type function_params_1
+  {
+	AstParDecl par = new AstParDecl(loc($ID, $type.t), $ID.text, $type.t);
+	$ll = $function_params_1.ll;
+	$ll.addFirst(par);
+  }
+  | { $ll = new LinkedList<AstParDecl>(); }
+  ;
+
+function_stmts
+  returns [AstStmt stmt]
+  : EQUAL statement { $stmt = $statement.stmt; }
+  | { $stmt = null; }
+  ;
+
+variable_declarations
+  returns [AstTree ast]
+  : VAR ID COLON type variable_declarations_1 SEMICOLON
+  {
+	AstVarDecl n = new AstVarDecl(loc($ID, $type.t), $ID.text, $type.t);
+	$variable_declarations_1.ll.addFirst(n);
+	$ast = new AstTrees<AstDecl>(loc($VAR, $SEMICOLON), "var declaration",
+				     $variable_declarations_1.ll);
+  }
+  ;
+
+variable_declarations_1
+  returns [LinkedList<AstDecl> ll]
+  : COMMA ID COLON type variable_declarations_1
+  {
+	$ll = $variable_declarations_1.ll;
+	$ll.addFirst(new AstVarDecl(loc($ID), $ID.text, $type.t));
+  }
+  | { $ll = new LinkedList<AstDecl>(); }
+  ;
+
+type
+  returns [AstType t]
+  : VOID { $t = new AstAtomType(loc($VOID), AstAtomType.Type.VOID); }
+  | CHAR { $t = new AstAtomType(loc($CHAR), AstAtomType.Type.CHAR); }
+  | INT  { $t = new AstAtomType(loc($INT), AstAtomType.Type.INT); }
+  | BOOL { $t = new AstAtomType(loc($BOOL), AstAtomType.Type.BOOL); }
+  | ID   { $t = new AstNameType(loc($ID), $ID.text); }
+  | LBRACKET expression RBRACKET type
+  | CARON type { $t = new AstPtrType(loc($CARON, $type.t), $type.t); }
+  | LBRACE ID COLON type type_1 RBRACE
+  {
+	AstTrees<AstCmpDecl> comps;
+	$type_1.ll.addFirst(new AstCmpDecl(loc($ID, $type.t), $ID.text, $type.t));
+	comps = new AstTrees<AstCmpDecl>("component declaration", $type_1.ll);
+	$t = new AstRecType(loc($LBRACE, $RBRACE), comps);
+  }
+  | LPAR type RPAR
+  {
+	$t = $type.t;
+	$t.relocate(loc($LPAR, $RPAR));
+  }
+  ;
+
+type_1
+  returns [LinkedList<AstCmpDecl> ll]
+  : COMMA ID COLON type type_1
+  {
+	$ll = $type_1.ll;
+	$ll.addFirst(new AstCmpDecl(loc($ID, $type.t), $ID.text, $type.t));
+  }
+  | { $ll = new LinkedList<AstCmpDecl>(); }
+  ;
+
+// relational operators - non-associative
+// other operators - left associative
+
+disjunctive_operator
+  : PIPE
+  ;
+
+conjunctive_operator
+  : AMPERSAND
+  ;
+
+relational_operator
+  : EQ
+  | NE
+  | LT
+  | GT
+  | LE
+  | GE
+  ;
+
+additive_operator
+  : PLUS
+  | MINUS
+  ;
+
+multiplicative_operator
+  : ASTERISK
+  | SLASH
+  | PERCENT
+  ;
+
+prefix_operator
+  : EXCLAM
+  | PLUS
+  | MINUS
+  | CARON
+  ;
+
+postfix_operator
+  : LBRACKET expression RBRACKET
+  | CARON
+  | DOT ID
+  ;
+
+expression
+  : disjunctive_expression
+  ;
+
+disjunctive_expression
+  : conjunctive_expression disjunctive_expression_1
+  ;
+
+disjunctive_expression_1
+  : disjunctive_operator conjunctive_expression disjunctive_expression_1
+  |
+  ;
+
+conjunctive_expression
+  : relational_expression conjunctive_expression_1
+  ;
+
+conjunctive_expression_1
+  : conjunctive_operator relational_expression conjunctive_expression_1
+  |
+  ;
+
+// different associativity than others
+relational_expression
+  : additive_expression relational_expression_1
+  ;
+
+relational_expression_1
+  : relational_operator additive_expression
+  |
+  ;
+
+additive_expression
+  : multiplicative_expression additive_expression_1
+  ;
+
+additive_expression_1
+  : additive_operator multiplicative_expression additive_expression_1
+  |
+  ;
+
+multiplicative_expression
+  : prefix_expression multiplicative_expression_1
+  ;
+
+multiplicative_expression_1
+  : multiplicative_operator prefix_expression multiplicative_expression_1
+  |
+  ;
+
+prefix_expression
+  : prefix_operator prefix_expression
+  | postfix_expression
+  ;
+
+postfix_expression
+  : final_expression postfix_expression_1
+  ;
+
+postfix_expression_1
+  : postfix_operator postfix_expression_1
+  |
+  ;
+
+final_expression
+  : VOID_CONST
+  | BOOL_CONST
+  | INT_CONST
+  | CHAR_CONST
+  | STRING_CONST
+  | PTR_CONST
+  | ID final_expression_1
+  | LPAR expression final_expression_4
+  | NEW LPAR type RPAR
+  | DEL LPAR expression RPAR
+  ;
+
+final_expression_1
+  : LPAR final_expression_2 RPAR
+  |
+  ;
+
+final_expression_2
+  : expression final_expression_3
+  |
+  ;
+
+final_expression_3
+  : COMMA expression final_expression_3
+  |
+  ;
+
+final_expression_4
+  : COLON type
+  |
+  ;
+
+statement
+  returns [AstStmt stmt]
+  : expression statement_1
+  | IF expression THEN statement statement_2
+  | WHILE expression DO statement
+  | LET declarations IN statement
+  | LBRACE statement statement_3 RBRACE
+  ;
+
+statement_1
+  : EQUAL expression
+  |
+  ;
+
+statement_2
+  : ELSE statement
+  |
+  ;
+
+statement_3
+  : SEMICOLON statement statement_3
+  |
+  ;

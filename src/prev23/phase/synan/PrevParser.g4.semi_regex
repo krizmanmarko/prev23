@@ -1,0 +1,154 @@
+parser grammar PrevParser;
+
+@header {
+
+	package prev23.phase.synan;
+	
+	import java.util.*;
+	
+	import prev23.common.report.*;
+	import prev23.phase.lexan.*;
+	
+}
+
+options{
+    tokenVocab=PrevLexer;
+}
+
+
+source
+  : declarations EOF
+  ;
+
+declarations
+  : (type_declarations | function_declarations | variable_declarations)+
+  ;
+
+type_declarations
+  : TYP ID EQUAL type (COMMA ID EQUAL type)* SEMICOLON
+  ;
+
+function_declarations
+  : FUN ID LPAR (ID COLON type (COMMA ID COLON type)*)? RPAR COLON type
+        (EQUAL statement)?
+    (COMMA ID LPAR (ID COLON type (COMMA ID COLON type)*)? RPAR COLON type
+        (EQUAL statement)?)* SEMICOLON
+  ;
+
+variable_declarations
+  : VAR ID COLON type (COMMA ID COLON type)* SEMICOLON
+  ;
+
+type
+  : VOID | CHAR | INT | BOOL | ID
+  | LBRACKET expression RBRACKET type
+  | CARON type
+  | LBRACE ID COLON type (COMMA ID COLON type)* RBRACE
+  | LPAR type RPAR
+  ;
+
+// relational operators - non-associative
+// other operators - left associative
+
+disjunctive_operator
+  : PIPE
+  ;
+
+conjunctive_operator
+  : AMPERSAND
+  ;
+
+relational_operator
+  : EQ | NE | LT | GT | LE | GE
+  ;
+
+additive_operator
+  : PLUS | MINUS
+  ;
+
+multiplicative_operator
+  : ASTERISK | SLASH | PERCENT
+  ;
+
+prefix_operator
+  : EXCLAM | PLUS | MINUS | CARON
+  ;
+
+postfix_operator
+  : LBRACKET expression RBRACKET | CARON | DOT ID
+  ;
+
+expression
+  : disjunctive_expression
+  ;
+
+disjunctive_expression
+  : conjunctive_expression disjunctive_expression_1
+  ;
+
+disjunctive_expression_1
+  : disjunctive_operator conjunctive_expression disjunctive_expression_1
+  |
+  ;
+
+conjunctive_expression
+  : relational_expression conjunctive_expression_1
+  ;
+
+conjunctive_expression_1
+  : conjunctive_operator relational_expression conjunctive_expression_1
+  |
+  ;
+
+// different associativity than others
+relational_expression
+  : additive_expression relational_operator additive_expression
+  | additive_expression
+  ;
+
+additive_expression
+  : multiplicative_expression additive_expression_1
+  ;
+
+additive_expression_1
+  : additive_operator multiplicative_expression additive_expression_1
+  |
+  ;
+
+multiplicative_expression
+  : prefix_expression multiplicative_expression_1
+  ;
+
+multiplicative_expression_1
+  : multiplicative_operator prefix_expression multiplicative_expression_1
+  |
+  ;
+
+prefix_expression
+  : prefix_operator prefix_expression
+  | postfix_expression
+  ;
+
+postfix_expression
+  : final_expression postfix_expression_1
+  ;
+
+postfix_expression_1
+  : postfix_operator postfix_expression_1
+  |
+  ;
+
+final_expression
+  : VOID_CONST | BOOL_CONST | INT_CONST | CHAR_CONST | STRING_CONST | PTR_CONST
+  | ID (LPAR (expression (COMMA expression)*)? RPAR)?
+  | LPAR expression (COLON type)? RPAR
+  | NEW LPAR type RPAR | DEL LPAR expression RPAR
+  ;
+
+statement
+  : expression (EQUAL expression)?
+  | IF expression THEN statement (ELSE statement)?
+  | WHILE expression DO statement
+  | LET declarations IN statement
+  | LBRACE statement (SEMICOLON statement)* RBRACE
+  ;

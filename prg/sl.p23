@@ -1,0 +1,33 @@
+fun putChar(c:int):void;
+
+fun f1(p1:int):int = {
+	let var l1:int;
+	fun f2(p2:int):int = {
+		let var l2:int;
+		fun f3(p3:int):int = {
+			let var l3:int;
+			in {
+				l3 = p3;
+				l2 = p2;
+				l1 = p1;
+				putChar(67);
+				3
+			}
+		};
+		in {
+			f3(2);
+			putChar(66);
+			2
+		}
+	};
+	in {
+		f2(3);
+		putChar(65);
+		1
+	}
+};
+
+fun main():int = {
+	f1(20);
+	0
+};

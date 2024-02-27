@@ -1,0 +1,211 @@
+parser grammar PrevParser;
+
+@header {
+
+	package prev23.phase.synan;
+	
+	import java.util.*;
+	
+	import prev23.common.report.*;
+	import prev23.phase.lexan.*;
+	
+}
+
+options{
+    tokenVocab=PrevLexer;
+}
+
+
+source
+  : declarations EOF
+  ;
+
+declarations
+  : (type_declarations | function_declarations | variable_declarations)
+  | (type_declarations | function_declarations | variable_declarations)
+        declarations
+  ;
+
+type_declarations
+  : TYP ID EQUAL type type_declarations_1
+  ;
+
+type_declarations_1
+  : COMMA ID EQUAL type type_declarations_1
+  | SEMICOLON
+  ;
+
+function_declarations
+  : FUN ID LPAR function_declarations_1
+  ;
+
+function_declarations_1
+  : ID COLON type function_declarations_2
+  | function_declarations_2
+  ;
+
+function_declarations_2
+  : COMMA ID COLON type function_declarations_2
+  | RPAR COLON type function_declarations_3
+  ;
+
+function_declarations_3
+  : EQUAL statement function_declarations_4
+  | function_declarations_4
+  ;
+
+function_declarations_4
+  : COMMA ID LPAR function_declarations_1
+  | SEMICOLON
+  ;
+
+variable_declarations
+  : VAR ID COLON type variable_declarations_1
+  ;
+
+variable_declarations_1
+  : COMMA ID COLON type variable_declarations_1
+  | SEMICOLON
+  ;
+
+type
+  : VOID | CHAR | INT | BOOL | ID
+  | LBRACKET expression RBRACKET type
+  | CARON type
+  | LBRACE ID COLON type type_1
+  | LPAR type RPAR
+  ;
+
+type_1
+  : COMMA ID COLON type type_1
+  | RBRACE
+  ;
+
+// relational operators - non-associative
+// other operators - left associative
+
+disjunctive_operator
+  : PIPE
+  ;
+
+conjunctive_operator
+  : AMPERSAND
+  ;
+
+relational_operator
+  : EQ | NE | LT | GT | LE | GE
+  ;
+
+additive_operator
+  : PLUS | MINUS
+  ;
+
+multiplicative_operator
+  : ASTERISK | SLASH | PERCENT
+  ;
+
+prefix_operator
+  : EXCLAM | PLUS | MINUS | CARON
+  ;
+
+postfix_operator
+  : LBRACKET expression RBRACKET | CARON | DOT ID
+  ;
+
+expression
+  : disjunctive_expression
+  ;
+
+disjunctive_expression
+  : conjunctive_expression disjunctive_expression_1
+  ;
+
+disjunctive_expression_1
+  : disjunctive_operator conjunctive_expression disjunctive_expression_1
+  |
+  ;
+
+conjunctive_expression
+  : relational_expression conjunctive_expression_1
+  ;
+
+conjunctive_expression_1
+  : conjunctive_operator relational_expression conjunctive_expression_1
+  |
+  ;
+
+// different associativity than others
+relational_expression
+  : additive_expression relational_operator additive_expression
+  | additive_expression
+  ;
+
+additive_expression
+  : multiplicative_expression additive_expression_1
+  ;
+
+additive_expression_1
+  : additive_operator multiplicative_expression additive_expression_1
+  |
+  ;
+
+multiplicative_expression
+  : prefix_expression multiplicative_expression_1
+  ;
+
+multiplicative_expression_1
+  : multiplicative_operator prefix_expression multiplicative_expression_1
+  |
+  ;
+
+prefix_expression
+  : prefix_operator prefix_expression
+  | postfix_expression
+  ;
+
+postfix_expression
+  : final_expression postfix_expression_1
+  ;
+
+postfix_expression_1
+  : postfix_operator postfix_expression_1
+  |
+  ;
+
+final_expression
+  : VOID_CONST | BOOL_CONST | INT_CONST | CHAR_CONST | STRING_CONST | PTR_CONST
+  | ID final_expression_1
+  | LPAR expression COLON type RPAR
+  | LPAR expression RPAR
+  | NEW LPAR type RPAR | DEL LPAR expression RPAR
+  ;
+
+final_expression_1
+  : LPAR final_expression_2
+  |
+  ;
+
+final_expression_2
+  : expression final_expression_3 
+  | RPAR
+  ;
+
+final_expression_3
+  : COMMA expression final_expression_3
+  | RPAR
+  ;
+
+statement
+  : expression EQUAL expression
+  : expression
+  | IF expression THEN statement ELSE statement
+  | IF expression THEN statement
+  | WHILE expression DO statement
+  | LET declarations IN statement
+  | LBRACE statement statement_1
+  ;
+
+statement_1
+  : SEMICOLON statement_1
+  | RBRACE
+  ;

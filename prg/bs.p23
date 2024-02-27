@@ -1,0 +1,6 @@
+fun f():int = g(),
+g():int = f();
+
+fun main():int = {
+	1
+};
